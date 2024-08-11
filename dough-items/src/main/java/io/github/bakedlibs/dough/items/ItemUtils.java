@@ -6,6 +6,8 @@ import javax.annotation.Nonnull;
 import javax.annotation.Nullable;
 
 import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
+import org.bukkit.Registry;
 import org.bukkit.enchantments.Enchantment;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.Damageable;
@@ -16,7 +18,7 @@ import io.github.bakedlibs.dough.items.nms.ItemNameAdapter;
 
 /**
  * A utility class providing some methods to handle {@link ItemStack}s.
- * 
+ *
  * @author TheBusyBiscuit
  *
  */
@@ -24,16 +26,26 @@ public final class ItemUtils {
 
     private static final ItemNameAdapter adapter = ItemNameAdapter.get();
 
+    private static final Enchantment UNBREAKING;
+
+    static {
+        Enchantment unbreaking = Registry.ENCHANTMENT.get(NamespacedKey.minecraft("unbreaking"));
+        if (unbreaking == null) {
+            throw new IllegalStateException("Could not find unbreaking enchantment!");
+        }
+        UNBREAKING = unbreaking;
+    }
+
     private ItemUtils() {}
 
     /**
      * This method returns a human-readable version of this item's name.
      * If the specified {@link ItemStack} has a Custom Display Name, it will return that.
      * Otherwise it will return the english name of it's {@link Material}
-     * 
+     *
      * @param item
      *            The Item to format
-     * 
+     *
      * @return The formatted Item Name
      */
     public static @Nonnull String getItemName(@Nullable ItemStack item) {
@@ -61,7 +73,7 @@ public final class ItemUtils {
     /**
      * This method compares two instances of {@link ItemStack} and checks
      * whether their {@link Material} and {@link ItemMeta} match.
-     * 
+     *
      * @param a
      *            {@link ItemStack} One
      * @param b
@@ -149,7 +161,7 @@ public final class ItemUtils {
     /**
      * This method damages the specified Item by 1.
      * If ignoredEnchantments is set to false, it will factor in the "Unbreaking" Enchantment.
-     * 
+     *
      * @param item
      *            The Item to damage
      * @param ignoreEnchantments
@@ -162,7 +174,7 @@ public final class ItemUtils {
     /**
      * This method damages the specified Item by the given amount.
      * If ignoredEnchantments is set to false, it will factor in the "Unbreaking" Enchantment.
-     * 
+     *
      * @param item
      *            The Item to damage
      * @param damage
@@ -173,9 +185,8 @@ public final class ItemUtils {
     public static void damageItem(@Nonnull ItemStack item, int damage, boolean ignoreEnchantments) {
         if (item.getType() != Material.AIR && item.getAmount() > 0) {
             int remove = damage;
-
-            if (!ignoreEnchantments && item.getEnchantments().containsKey(Enchantment.DURABILITY)) {
-                int level = item.getEnchantmentLevel(Enchantment.DURABILITY);
+            if (!ignoreEnchantments && item.getEnchantments().containsKey(UNBREAKING)) {
+                int level = item.getEnchantmentLevel(UNBREAKING);
 
                 for (int i = 0; i < damage; i++) {
                     if (Math.random() * 100 <= (60 + Math.floorDiv(40, (level + 1)))) {
@@ -199,7 +210,7 @@ public final class ItemUtils {
     /**
      * This Method will consume the Item in the specified slot.
      * See {@link ItemUtils#consumeItem(ItemStack, int, boolean)} for further details.
-     * 
+     *
      * @param item
      *            The Item to consume
      * @param replaceConsumables
@@ -213,16 +224,16 @@ public final class ItemUtils {
     /**
      * This Method consumes a specified amount of items from the
      * specified slot.
-     * 
+     *
      * The items will be removed from the slot, if the slot does not hold enough items,
      * it will be replaced with null.
      * Note that this does not check whether there are enough Items present,
      * if you specify a bigger amount than present, it will simply set the Item to null.
-     * 
+     *
      * If replaceConsumables is true, the following things will not be replaced with 'null':
      * {@code Buckets -> new ItemStack(Material.BUCKET)}
      * {@code Potions -> new ItemStack(Material.GLASS_BOTTLE)}
-     * 
+     *
      * @param item
      *            The Item to consume
      * @param amount
